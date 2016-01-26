@@ -27,6 +27,8 @@ public class ControlCrawler {
     static HashMap<String, Integer> subDomainMap;
 
     public static void main(String[] args) throws Exception {
+
+        long start = System.currentTimeMillis();
         if (args.length != 2) {
             System.out.println("Needed parameters: ");
             System.out.println("\t rootFolder (it will contain intermediate crawl data)");
@@ -79,7 +81,7 @@ public class ControlCrawler {
      * You can set the maximum crawl depth here. The default value is -1 for
      * unlimited depth
      */
-        config.setMaxDepthOfCrawling(0);
+        config.setMaxDepthOfCrawling(-1);
 
     /*
      * You can set the maximum number of pages to crawl. The default value
@@ -126,7 +128,7 @@ public class ControlCrawler {
      */
         controller.start(Crawler.class, numberOfCrawlers);
 
-        //TODO Print hashmap of subdomains to file
+        //Writes subdomains to text files
         List<String> sortedSubDomains  = new ArrayList<String>(subDomainMap.keySet());
 
         sortedSubDomains.sort((String a, String b) -> {
@@ -145,5 +147,45 @@ public class ControlCrawler {
             fOut.write(subDomain + ", " + subDomainMap.get(subDomain) + "\n");
         }
         fOut.close();
+
+        // Processing sub domains - word counts
+
+        List<String> word = new ArrayList<>();
+
+        String[] files = folder.list();
+        for (String file: files)
+        {
+            List<String> words = Utilities.tokenizeFile(new File("pages/"+ file));
+            word.addAll(words);
+        }
+        //TODO Filter based on stopwords
+        List<Frequency> frequencies = WordFrequencyCounter.computeWordFrequencies(word);
+
+        frequencies.sort((Frequency a, Frequency b) -> {
+            if (Integer.compare(b.getFrequency(),a.getFrequency())== 0)
+            {
+                return a.getText().compareTo(b.getText());
+            }
+            else
+                return Integer.compare(b.getFrequency(),a.getFrequency());
+        });
+
+        File commonWords = new File("CommonWords.txt");
+        FileWriter cwOut = new FileWriter("CommonWords.txt");
+
+        if (commonWords.exists())
+            commonWords.delete();
+            
+        // Check to make to sure this is correct cause I added this through the github website
+        HashSet<String> stopWords = new HashSet<>(Arrays.asList("a", "about", "above", "after", "again", "against", "all", "am", "an", "and", "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being", "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't", "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during", "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't", "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here", "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i", "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's", "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself", "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought", "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she", "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such", "than", "that", "that's", "the", "their", "theirs", "them", "themselves", "then", "there", "there's", "these", "they", "they'd", "they'll", "they're", "they've", "this", "those", "through", "to", "too", "under", "until", "up", "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were", "weren't", "what", "what's", "when", "when's", "where", "where's", "which", "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would", "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours", "yourself", "yourselves"));
+
+//        for (int i = 0; i < 1; i++)
+//            cwOut.write(frequencies.get(i).getText() + " " + frequencies.get(i).getFrequency());
+
+        System.out.println(frequencies);
+
+        cwOut.close();
+
+        System.out.println("Runtime: " + (System.currentTimeMillis()-start) + "ms");
     }
 }
