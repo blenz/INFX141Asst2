@@ -8,12 +8,14 @@ package ir.assignments.three;
  * Example used: https://github.com/yasserg/crawler4j/tree/master/src/test/java/edu/uci/ics/crawler4j/examples/basic
  */
 
-
+import com.sleepycat.je.txn.LockerFactory;
 import edu.uci.ics.crawler4j.crawler.CrawlConfig;
 import edu.uci.ics.crawler4j.crawler.CrawlController;
 import edu.uci.ics.crawler4j.fetcher.PageFetcher;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtConfig;
 import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,6 +23,7 @@ import java.io.FileWriter;
 import java.util.*;
 
 public class ControlCrawler {
+    private static Logger logger = LoggerFactory.getLogger(ControlCrawler.class);
     static HashMap<String, Integer> subDomainMap;
 
     public static void main(String[] args) throws Exception {
@@ -49,6 +52,7 @@ public class ControlCrawler {
         CrawlConfig config = new CrawlConfig();
 
         config.setCrawlStorageFolder(crawlStorageFolder);
+        config.setFollowRedirects(false);
 
         File folder = new File("pages");
         if (folder.exists()) {
@@ -84,7 +88,7 @@ public class ControlCrawler {
      * You can set the maximum number of pages to crawl. The default value
      * is -1 for unlimited number of pages
      */
-        config.setMaxPagesToFetch(1000);
+        config.setMaxPagesToFetch(-1);
 
 
         config.setUserAgentString("UCI Inf141-CS121 crawler 34363846 47508988 76382638 47911659");
@@ -95,7 +99,7 @@ public class ControlCrawler {
          */
         config.setIncludeBinaryContentInCrawling(false);
 
-    /*   //TODO See if you want to use resumable crawling
+    /*
      * This config parameter can be used to set your crawl to be resumable
      * (meaning that you can resume the crawl from a previously
      * interrupted/crashed crawl). Note: if you enable resuming feature and
@@ -173,7 +177,7 @@ public class ControlCrawler {
 
         word.removeAll(stopWords);
 
-        //TODO Filter based on stopwords
+        //done Filter based on stopwords
         List<Frequency> frequencies = WordFrequencyCounter.computeWordFrequencies(word);
 
         frequencies.sort((Frequency a, Frequency b) -> {
